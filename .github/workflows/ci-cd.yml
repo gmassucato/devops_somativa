@@ -25,6 +25,20 @@ jobs:
       - name: Rodar testes
         run: npm test --if-present
 
+      - name: Alerta de sucesso no Discord
+        if: success()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{"content": "OK ->  **Pipeline concluído com sucesso!** Todos os testes passaram no repositório ${{ github.repository }}."}' \
+          ${{ secrets.DISCORD_WEBHOOK }}
+
+      - name: Alerta de falha no Discord
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{"content": "ERRO ->  **Pipeline falhou!** Verifique os testes no repositório ${{ github.repository }}."}' \
+          ${{ secrets.DISCORD_WEBHOOK }}
+
   docker:
     runs-on: ubuntu-latest
     needs: testes
@@ -46,3 +60,17 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/devops-somativa:latest
+
+      - name: Alerta de sucesso Docker no Discord
+        if: success()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{"content": "OK ->  **Imagem Docker publicada com sucesso** no DockerHub!"}' \
+          ${{ secrets.DISCORD_WEBHOOK }}
+
+      - name: Alerta de falha Docker no Discord
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{"content": "ERRO -> **Falha ao publicar imagem Docker** no DockerHub!"}' \
+          ${{ secrets.DISCORD_WEBHOOK }}
